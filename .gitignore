@@ -1,0 +1,8 @@
+config/
+runs/
+*.md
+test/
+.venv_test/
+**/logs/
+*.dylib
+.venv/
