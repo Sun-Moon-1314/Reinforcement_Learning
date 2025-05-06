@@ -8,7 +8,9 @@
 """
 
 from envs.mountaincar import *
-from run_function_by_class.run_select_func import run_select_func
+from run_envs.run_select_func import run_select_func
+
+
 def run_mountain_car():
     """
     小车上山

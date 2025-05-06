@@ -50,8 +50,8 @@ class Env:
         #     self.Action_Num = self.envs.action_space.n
 
         # 初始化Q（s，a）表
-        if isinstance(self.observation_space, Box) and isinstance(self.action_space, Box):
-            self.q_sa = np.zeros((self.State_Num, self.Action_Num))
+        # if isinstance(self.observation_space, Box) and isinstance(self.action_space, Box):
+        #     self.q_sa = np.zeros((self.State_Num, self.Action_Num))
         # 模型存储控制
         self.save_policy = False
         self.load_model = False

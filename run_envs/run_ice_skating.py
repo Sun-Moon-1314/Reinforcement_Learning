@@ -7,7 +7,7 @@
 @Desc    : <brief_description> # 文件的简要描述
 """
 from envs.frozenlake import FrozenEnv
-from run_function_by_class.run_select_func import run_select_func
+from run_envs.run_select_func import run_select_func
 
 
 def run_ice_skating_game():

@@ -9,6 +9,7 @@
 import time
 from collections import deque
 
+from pygame.gfxdraw import trigon
 from torch import optim, dtype
 from torch.utils.tensorboard import SummaryWriter
 import gym
@@ -43,10 +44,8 @@ logger.setLevel(logging.INFO)
 # 恢复日志
 # logging.disable(logging.NOTSET)
 
-seed = 42
+seed = 100
 current_time = time.localtime()
-print(f"\nPyTorch version: {torch.__version__}")  # 需要 >=1.8.0
-print(f"TensorBoard version:{tensorboard.__version__}")  # 需要 >=2.4.0
 
 
 def make_env(env_name):
@@ -1639,13 +1638,13 @@ class PPOActorCriticAgent(Worker):
 class SACActorCriticAgent(PPOActorCriticAgent):
     def __init__(self, env, global_a3c_model, global_optimizer, replayer_capacity=100000):
         self.env = env
-        # self.env.reset(seed=seed)
+        self.env.reset(seed=seed)
         super().__init__(env=env, global_optimizer=global_optimizer, global_a3c_model=global_a3c_model)
         self.gamma = 0.99
         self.entropy_alpha = 0.5
-        self.target_alpha = 0.0005
+        self.target_alpha = 0.005
         self.batch_size = 64
-        self.batches = 5
+        self.batches = 10
         self.temperature = 1.0
         self.learn_step_counter = int(0)
         self.load_model = True
@@ -1657,7 +1656,7 @@ class SACActorCriticAgent(PPOActorCriticAgent):
 
         # replayer experience pool
         # self.sac_replayer = SACReplayer(replayer_capacity)
-        self.sac_replayer = PERReplayer(capacity=replayer_capacity, beta=0.6)
+        self.sac_replayer = PERReplayer(capacity=replayer_capacity, beta=0.4)
 
         # evaluate net
         self.sac_actor = BuildNetwork(
@@ -1666,7 +1665,7 @@ class SACActorCriticAgent(PPOActorCriticAgent):
             hidden_layers=[64, 128],
             hidden_activation=nn.ReLU,
             out_activation=nn.Softmax,
-            optimizer_params={"lr": 0.00001}
+            optimizer_params={"lr": 0.0001}
         )
         self.sac_actor_optimizer = self.sac_actor.get_optimizer()
         self.sac_actor_scheduler = optim.lr_scheduler.StepLR(self.sac_actor_optimizer,
@@ -1679,7 +1678,7 @@ class SACActorCriticAgent(PPOActorCriticAgent):
             hidden_layers=[64, 128],
             hidden_activation=nn.ReLU,
             out_activation=None,
-            optimizer_params={"lr": 0.00001}
+            optimizer_params={"lr": 0.0001}
         )
         self.q0_net_optimizer = self.q0_net.get_optimizer()
         self.q0_net_scheduler = optim.lr_scheduler.StepLR(self.q0_net_optimizer,
@@ -1691,7 +1690,7 @@ class SACActorCriticAgent(PPOActorCriticAgent):
             hidden_layers=[64, 128],
             hidden_activation=nn.ReLU,
             out_activation=None,
-            optimizer_params={"lr": 0.00001}
+            optimizer_params={"lr": 0.0001}
         )
         self.q1_net_optimizer = self.q1_net.get_optimizer()
         self.q1_net_scheduler = optim.lr_scheduler.StepLR(self.q1_net_optimizer,
@@ -1704,7 +1703,7 @@ class SACActorCriticAgent(PPOActorCriticAgent):
             hidden_layers=[256],
             hidden_activation=nn.ReLU,
             out_activation=None,
-            optimizer_params={"lr": 0.0001}
+            optimizer_params={"lr": 0.001}
         )
         self.sac_critic_main_optimizer = self.sac_critic_main.get_optimizer()
         self.sac_critic_main_scheduler = optim.lr_scheduler.StepLR(self.sac_critic_main_optimizer,
@@ -1717,7 +1716,7 @@ class SACActorCriticAgent(PPOActorCriticAgent):
             hidden_layers=[256],
             hidden_activation=nn.ReLU,
             out_activation=None,
-            optimizer_params={"lr": 0.0001}
+            optimizer_params={"lr": 0.001}
         )
         self.sac_critic_target_optimizer = self.sac_critic_target.get_optimizer()
         self.sac_critic_target_scheduler = optim.lr_scheduler.StepLR(self.sac_critic_target_optimizer,
@@ -1862,7 +1861,19 @@ class SACActorCriticAgent(PPOActorCriticAgent):
             self.sac_actor_optimizer.step()
             if self.learn_step_counter > 0 and self.learn_step_counter % 10 == 0:
                 self.soft_update()
+            if self.learn_step_counter > 0 and self.learn_step_counter % 500 == 0:
+                self.sac_actor_scheduler.step()
+                self.sac_critic_target_scheduler.step()
+                self.sac_critic_main_scheduler.step()
+                self.q0_net_scheduler.step()
+                self.q1_net_scheduler.step()
 
+            if self.learn_step_counter > 0 and self.learn_step_counter % 500 == 0:
+                logger.info(f"self.learn_step_counter: {self.learn_step_counter}")
+                self.sac_replayer.clean_old_data_by_age()
+            if self.learn_step_counter > 0 and self.learn_step_counter % 1000 == 0:
+                logger.info(f"self.learn_step_counter: {self.learn_step_counter}")
+                self.sac_replayer.clean_old_data()
             # 假设每个批次的结果是计算得到的
             original_entropies.append(entropies_t.detach().mean().item())
             total_entropies.append(entropies.mean().item())
@@ -1886,8 +1897,6 @@ class SACActorCriticAgent(PPOActorCriticAgent):
             self.writer.add_scalar("Loss/critic_losses_q1", avg_critic_loss_q1, self.learn_step_counter)
             self.writer.add_scalar("Loss/critic_losses", avg_critic_loss, self.learn_step_counter)
             self.writer.add_scalar("Loss/actor_losses", avg_actor_loss, self.learn_step_counter)
-            # self.learn_step_counter += 1
-            # self.sac_replayer.learn_step_counter += 1
 
             total_entropies.clear()
             total_critic_losses_q0.clear()
@@ -1906,20 +1915,12 @@ class SACActorCriticAgent(PPOActorCriticAgent):
             target_params.data.copy_(self.target_alpha * main_params + (1 - self.target_alpha) * target_params)
 
     def loader_pool(self, observation, action, reward, next_observation, entropy, done):
-        from tqdm import tqdm
         remaining = max(0, 1000 - self.sac_replayer.count)  # 计算还需要填充的样本数量
         if remaining > 0:
             if self.sac_replayer.count < 1000:
-                with tqdm(total=1000, initial=self.sac_replayer.count, dynamic_ncols=True,
-                          desc="Experience Pool Loader") as pbar:
-                    for _ in range(1000):
-                        self.sac_replayer.replay_store(
-                            observation, action, reward, next_observation, entropy, done, pbar=pbar
-                        )
-                        # self.sac_replayer.replay_store(
-                        #     observation, action, reward, next_observation, entropy, done, priority=1.0, pbar=pbar
-                        # )
-                        # time.sleep(0.01)
+                self.sac_replayer.replay_store(
+                    observation, action, reward, next_observation, entropy, done
+                )
 
     def sac_play(self, train):
         # 获取初始状态
@@ -1954,7 +1955,8 @@ class SACActorCriticAgent(PPOActorCriticAgent):
             # 环境更新
             next_observation, reward, terminated, truncated, _ = self.step(action)
             # 填充经验池
-            self.loader_pool(observation, action, reward, next_observation, entropy, done)
+            if train:
+                self.loader_pool(observation, action, reward, next_observation, entropy, done)
 
             logger.debug(f"Next_Observation: {next_observation} range is "
                          f"{self.env.observation_space.contains(next_observation)}")

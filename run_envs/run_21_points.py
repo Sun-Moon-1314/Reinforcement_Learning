@@ -6,9 +6,10 @@
 @Email   : <your_email>    # 作者电子邮件
 @Desc    : <brief_description> # 文件的简要描述
 """
-import gym
 from envs.blackjack import BlackjackEnv
-from run_function_by_class.run_select_func import run_select_func
+from run_envs.run_select_func import run_select_func
+
+
 def run_21_points_game():
     # 创建 Blackjack 环境
     env = BlackjackEnv(name="Blackjack-v1")

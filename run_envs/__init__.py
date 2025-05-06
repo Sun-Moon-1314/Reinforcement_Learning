@@ -14,6 +14,7 @@ from .run_select_func import run_select_func
 from .run_mountain_car import run_mountain_car
 from .run_cartpole import run_cartpole
 from .run_acrobot import run_acrobot
+from .run_pendulum import run_pendulum
 
 logger.info(f"Initializing run_function")
 __all__ = [
@@ -23,5 +24,6 @@ __all__ = [
     'run_select_func',
     'run_mountain_car',
     'run_cartpole',
-    'run_acrobot'
+    'run_acrobot',
+    'run_pendulum'
 ]

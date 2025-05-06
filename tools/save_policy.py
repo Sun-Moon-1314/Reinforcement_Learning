@@ -159,6 +159,30 @@ class Policy_loader:
                        f'{sac_critic_target_dir_py}.pth')
 
             logger.info(f"保存-->sac--模型")
+        elif "ddpg_actor" in policy:
+            ddpg_actor_dir_py = os.path.join(policy_dir, f'ddpg_actor')
+            ddpg_critic_dir_py = os.path.join(policy_dir, f'ddpg_critic')
+            # 保存 evaluate_net_pytorch 和 target_net_pytorch 的模型权重（state_dict）
+            torch.save({'model_state_dict': policy['ddpg_actor'].state_dict(),
+                        'optimizer_state_dict': policy['ddpg_actor_optimizer'].state_dict(), }, f'{ddpg_actor_dir_py}.pth')
+            torch.save({'model_state_dict': policy['ddpg_critic'].state_dict(),
+                        'optimizer_state_dict': policy['ddpg_critic_optimizer'].state_dict(), },
+                       f'{ddpg_critic_dir_py}.pth')
+            logger.info(f"保存-->ddpg_actor+-->ddpg_critic模型")
+        elif "td3_actor" in policy:
+            td3_actor_dir_py = os.path.join(policy_dir, f'td3_actor')
+            td3_critic_0_dir_py = os.path.join(policy_dir, f'td3_critic_0')
+            td3_critic_1_dir_py = os.path.join(policy_dir, f'td3_critic_1')
+            # 保存 evaluate_net_pytorch 和 target_net_pytorch 的模型权重（state_dict）
+            torch.save({'model_state_dict': policy['td3_actor'].state_dict(),
+                        'optimizer_state_dict': policy['td3_actor_optimizer'].state_dict(), }, f'{td3_actor_dir_py}.pth')
+            torch.save({'model_state_dict': policy['td3_critic_0'].state_dict(),
+                        'optimizer_state_dict': policy['td3_critic_0_optimizer'].state_dict(), },
+                       f'{td3_critic_0_dir_py}.pth')
+            torch.save({'model_state_dict': policy['td3_critic_1'].state_dict(),
+                        'optimizer_state_dict': policy['td3_critic_1_optimizer'].state_dict(), },
+                       f'{td3_critic_1_dir_py}.pth')
+            logger.info(f"保存-->td3_actor+-->td3_critic_0+-->td3_critic_1模型")
 
     @staticmethod
     def load_policy(class_name, method_name):

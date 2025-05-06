@@ -7,7 +7,9 @@
 @Desc    : 
 """
 from envs.cartpole import *
-from run_function_by_class.run_select_func import run_select_func
+from run_envs.run_select_func import run_select_func
+
+
 def run_cartpole():
     """
     平衡杆

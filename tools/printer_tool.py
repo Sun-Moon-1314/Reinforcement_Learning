@@ -6,7 +6,7 @@
 @Email   : your_email@example.com
 @Desc    :
 """
-import gym
+import gymnasium as gym
 import numpy as np
 
 class PrintTool:
@@ -48,5 +48,6 @@ class PrintTool:
     def get_related_env(name):
         if len(name) == 0:
             return
-        env = gym.make(name)
+        env = gym.make(name, render_mode="rgb_array")
+        env.reset(seed=123, options={"low": -0.7, "high": 0.5})
         print(env.spec)  # 打印环境的配置详情

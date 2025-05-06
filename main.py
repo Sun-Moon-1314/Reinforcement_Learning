@@ -7,7 +7,7 @@
 @Desc    : study
 """
 
-import run_function_by_class as select
+import run_envs as select
 from tools.printer_tool import PrintTool as printout
 # 根记录器的日志
 import logging
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     show_all_env = False
     if show_all_env:
         printout.print_all_env()
-        printout.get_related_env(name="Taxi-v3")
+        printout.get_related_env(name="Pendulum-v1")
 
     choose_env = {
         "冰面滑行": "FrozenLake-v1",
@@ -31,10 +31,11 @@ if __name__ == '__main__':
         "小车上山": "MountainCar-v0",
         "平衡杆": "CartPole-v0",
         "双节倒立摆": "Acrobot-v1",
+        "单节倒立摆": "Pendulum-v1",
         # ...
     }
 
-    choose = choose_env.get("双节倒立摆")
+    choose = choose_env.get("单节倒立摆")
     if choose == "Blackjack-v1":
         select.run_21_points_game()
     if choose == "FrozenLake-v1":
@@ -47,3 +48,5 @@ if __name__ == '__main__':
         select.run_cartpole()
     if choose == "Acrobot-v1":
         select.run_acrobot()
+    if choose == "Pendulum-v1":
+        select.run_pendulum()
